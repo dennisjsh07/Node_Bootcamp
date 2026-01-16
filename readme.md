@@ -7,5 +7,7 @@ This bootcamp covers node.js topics from basics to advance
 - exports and imports
 
 #### 2.Node-Package-Manager :
-- .path() 
-- .fs()
+- path
+- fs
+- http
+- EventEmitter 
