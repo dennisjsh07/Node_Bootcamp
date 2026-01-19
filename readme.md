@@ -11,3 +11,9 @@ This bootcamp covers node.js topics from basics to advance
 - fs
 - http
 - EventEmitter 
+
+#### #.Express
+- create server
+- router
+- middleware
+- input validation (zod)
