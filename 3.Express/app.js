@@ -148,17 +148,14 @@ app.delete("/:id", decodeJwt, (req, res) => {
     return;
   }
 
-  let arr = [];
-  for (let i = 0; i < todos.length; i++) {
-    if (todos[i].id !== id) {
-      arr.push(todos[i]);
-    }
-  }
-
-  todos = arr;
+  const deletedTodo = todos.splice(index, 1);
   res
     .status(200)
-    .json({ msg: "Todo deleted successfully", updatedTodos: todos });
+    .json({
+      msg: "Todo deleted successfully",
+      updatedTodos: todos,
+      deletedTodo: deletedTodo,
+    });
 });
 
 // add a global catch
