@@ -18,4 +18,8 @@ This bootcamp covers node.js topics from basics to advance
 - middleware
 - input validation (zod)
 - jwt
-- 
+
+#### 4.Bookstore-fileserver
+- bookstore application which uses fs module of node to save the data
+
+
