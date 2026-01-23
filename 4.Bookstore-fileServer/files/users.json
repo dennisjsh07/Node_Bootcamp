@@ -1,32 +1,30 @@
 [
   {
-    "id": 42974,
-    "userId": "Dennis",
+    "id": 396376,
+    "userId": "dennis",
     "password": "Anime@123",
-    "createdAt": "2026-01-21T18:06:45.180Z"
+    "roles": ["Buyer", "Admin"],
+    "createdAt": "2026-01-23T17:01:04.105Z"
   },
   {
-    "id": 659239,
-    "userId": "Bhavin",
+    "id": 722033,
+    "userId": "shaul",
     "password": "Anime@123",
-    "createdAt": "2026-01-21T18:07:03.633Z"
+    "roles": ["Buyer"],
+    "createdAt": "2026-01-23T17:01:21.201Z"
   },
   {
-    "id": 321943,
-    "userId": "Allen",
+    "id": 58989,
+    "userId": "bhavin",
     "password": "Anime@123",
-    "createdAt": "2026-01-21T18:07:08.471Z"
+    "roles": ["Buyer"],
+    "createdAt": "2026-01-23T17:01:25.533Z"
   },
   {
-    "id": 749971,
-    "userId": "Alice",
+    "id": 411291,
+    "userId": "allen",
     "password": "Anime@123",
-    "createdAt": "2026-01-21T18:07:12.675Z"
-  },
-  {
-    "id": 245009,
-    "userId": "Shaul",
-    "password": "Anime@123",
-    "createdAt": "2026-01-21T18:07:17.395Z"
+    "roles": ["Buyer"],
+    "createdAt": "2026-01-23T17:01:29.245Z"
   }
 ]
