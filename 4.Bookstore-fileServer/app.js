@@ -43,7 +43,13 @@ function auth(req, res, next) {
   }
 }
 
-// create admin middleware
+function isAdmin(req, res, next) {
+  if (!req.user.roles || !req.user.roles.includes("Admin")) {
+    res.status(403).json({ msg: "Admin access required" });
+    return;
+  }
+  next();
+}
 
 app.post("/signup", (req, res) => {
   const newUser = {
@@ -89,11 +95,14 @@ app.post("/signin", (req, res) => {
 
     const users = JSON.parse(data);
 
-    const userId = users.find((i) => i.userId === loginPayload.userId);
-    const password = users.find((i) => i.password === loginPayload.password);
+    const user = users.find(
+      (i) =>
+        i.userId === loginPayload.userId &&
+        i.password === loginPayload.password,
+    );
 
-    if (userId === undefined || password === undefined) {
-      res.status(404).json({ msg: "User Not Found" });
+    if (!user) {
+      res.status(404).json({ msg: "user not found" });
       return;
     }
 
@@ -102,7 +111,7 @@ app.post("/signin", (req, res) => {
   });
 });
 
-app.get("/users", (req, res) => {
+app.get("/users", auth, isAdmin, (req, res) => {
   fs.readFile("./files/users.json", "utf-8", (err, data) => {
     if (err) {
       res.status(400).json({ err: err });
@@ -114,7 +123,7 @@ app.get("/users", (req, res) => {
   });
 });
 
-app.get("/users/:id", (req, res) => {
+app.get("/users/:id", auth, isAdmin, (req, res) => {
   const id = parseInt(req.params.id);
   fs.readFile("./files/users.json", "utf-8", (err, data) => {
     if (err) {
@@ -129,7 +138,7 @@ app.get("/users/:id", (req, res) => {
   });
 });
 
-app.post("/createBook", auth, (req, res) => {
+app.post("/createBook", auth, isAdmin, (req, res) => {
   const newBook = {
     id: Math.floor(Math.random() * 1000000),
     bookName: req.body.bookName,
@@ -151,9 +160,7 @@ app.post("/createBook", auth, (req, res) => {
         res.status(400).json({ msg: err });
         return;
       }
-      res
-        .status(200)
-        .json({ msg: "Book created successFully", newBook: newBook });
+      res.status(200).json({ msg: "Book created successFully", data: newBook });
     });
   });
 });
@@ -166,7 +173,7 @@ app.get("/books", auth, (req, res) => {
     }
 
     const books = JSON.parse(data);
-    res.status(200).json({ books: books });
+    res.status(200).json({ data: books });
   });
 });
 
@@ -187,7 +194,7 @@ app.get("/book/:bookId", auth, (req, res) => {
       return;
     }
 
-    res.status(200).json({ book: books[index] });
+    res.status(200).json({ data: books[index] });
   });
 });
 
@@ -195,7 +202,7 @@ app.post("/purchase/:bookId", auth, (req, res) => {
   const bookId = parseInt(req.params.bookId);
   // construct the payload, pass bookId from params and userId from jwt token
   const cart = {
-    userId: req.userId,
+    userId: req.user.userId,
     books: [bookId],
     createdAt: new Date(),
   };
@@ -210,29 +217,25 @@ app.post("/purchase/:bookId", auth, (req, res) => {
 
     const getUser = purchaseDocs.find((i) => i.userId === cart.userId);
 
-    if (getUser === undefined) {
+    if (!getUser) {
       // insert cart data into the file, send response and return
-      purchaseDocs.push(JSON.stringify(cart));
-      fs.writeFile("./files/purchasedBooks.json", purchaseDocs, (err) => {
-        if (err) {
-          res.status(400).json({ err: err });
-          return;
-        }
-        res.status(201).json({ msg: "Book purchased successfully" });
-      });
+      purchaseDocs.push(cart);
     } else {
       // only update the books array, send response and return
       getUser.books.push(bookId);
       getUser.updatedAt = new Date();
-      fs.writeFile("./files/purchasedBooks.json", purchaseDocs, (err) => {
+    }
+    fs.writeFile(
+      "./files/purchasedBooks.json",
+      JSON.stringify(purchaseDocs),
+      (err) => {
         if (err) {
           res.status(400).json({ err: err });
           return;
         }
-
         res.status(201).json({ msg: "Book purchased successfully" });
-      });
-    }
+      },
+    );
   });
 });
 
@@ -243,8 +246,17 @@ app.get("/purchases", auth, (req, res) => {
       return;
     }
     const purchaseData = JSON.parse(data);
-    purchaseData.filter((i) => i.userId === req.userId);
-    res.status(200).json({ data: purchaseData });
+    const userData = purchaseData.filter((i) => i.userId === req.user.userId);
+    console.log(userData);
+    fs.readFile("./files/books.json", "utf-8", (err, data) => {
+      if (err) {
+        res.status(400).json({ msg: err });
+        return;
+      }
+      const books = JSON.parse(data);
+      const booksData = books.filter((i) => userData[0].books.includes(i.id));
+      res.status(200).json({ data: booksData });
+    });
   });
 });
 
@@ -261,12 +273,12 @@ app.listen(port, () => {
 // start a express server - done
 
 // admin api's
-// create api to create users - done
 // create api to see all users - done
-// create api to view data of a particular user -
+// create api to view data of a particular user - done
 // create api to create books - done
 
 // user api's
+// create api to create users - done
 // create api for users to login  - done
 // create api to get all books - done
 // create api to get a particular book - done
@@ -275,11 +287,11 @@ app.listen(port, () => {
 
 // implement zod for input validation
 
-// implement jwt for authentication
+// implement jwt for authentication done
 
 // hash password using bcrypt
 
-// implement global catch
+// implement global catch done
 
 // there is a lot of repetitive code for create try to create a single global function and reuse it
 
