@@ -1,8 +1,11 @@
 const express = require("express");
 const fs = require("fs");
+const z = require("zod");
 const jwt = require("jsonwebtoken");
 const jwtPassword = "123456789";
 const port = 3000;
+const bcrypt = require("bcrypt");
+const saltRounds = 10;
 
 const app = express();
 
@@ -51,11 +54,71 @@ function isAdmin(req, res, next) {
   next();
 }
 
-app.post("/signup", (req, res) => {
+function userPayloadValidate(req, res, next) {
+  const schema = z.object({
+    userId: z.string(),
+    password: z.string(),
+    roles: z.array(z.string()),
+  });
+
+  const inputBody = {
+    userId: req.body.userId,
+    password: req.body.password,
+    roles: req.body.roles,
+  };
+
+  const result = schema.safeParse(inputBody);
+
+  if (!result.success) {
+    res.status(400).json({ msg: "invalide inputs" });
+    return;
+  }
+  next();
+}
+
+function bookPayloadValidate(req, res, next) {
+  const schema = z.object({
+    bookName: z.string(),
+    authorname: z.string(),
+  });
+
+  const inputBody = {
+    bookName: req.body.bookName,
+    authorname: req.body.authorname,
+  };
+
+  const result = schema.safeParse(inputBody);
+  if (!result.success) {
+    res.status(400).json({ msg: "Invalid inputs" });
+    return;
+  }
+  next();
+}
+
+function loginPayloadValidate(req, res, next) {
+  const schema = z.object({
+    userId: z.string(),
+    password: z.string(),
+  });
+
+  const inputBody = {
+    userId: req.body.userId,
+    password: req.body.password,
+  };
+
+  const result = schema.safeParse(inputBody);
+  if (!result.success) {
+    res.status(400).json({ msg: "invalid inputs" });
+    return;
+  }
+  next();
+}
+
+app.post("/signup", userPayloadValidate, async (req, res) => {
   const newUser = {
     id: Math.floor(Math.random() * 1000000),
     userId: req.body.userId,
-    password: req.body.password,
+    password: await bcrypt.hash(req.body.password, saltRounds),
     roles: req.body.roles,
     createdAt: new Date(),
   };
@@ -76,18 +139,18 @@ app.post("/signup", (req, res) => {
       }
       res
         .status(200)
-        .json({ msg: "New user added successfully", newUser: newUser });
+        .json({ msg: "New user added successfully", data: newUser });
     });
   });
 });
 
-app.post("/signin", (req, res) => {
+app.post("/signin", loginPayloadValidate, (req, res) => {
   const loginPayload = {
     userId: req.body.userId,
     password: req.body.password,
   };
 
-  fs.readFile("./files/users.json", "utf-8", (err, data) => {
+  fs.readFile("./files/users.json", "utf-8", async (err, data) => {
     if (err) {
       res.status(400).json({ err: err });
       return;
@@ -95,14 +158,20 @@ app.post("/signin", (req, res) => {
 
     const users = JSON.parse(data);
 
-    const user = users.find(
-      (i) =>
-        i.userId === loginPayload.userId &&
-        i.password === loginPayload.password,
-    );
-
+    // Find User
+    const user = users.find((i) => i.userId === loginPayload.userId);
     if (!user) {
-      res.status(404).json({ msg: "user not found" });
+      res.status(401).json({ msg: "Invalid credentials" });
+      return;
+    }
+
+    // compare password
+    const isPwdValid = await bcrypt.compare(
+      loginPayload.password,
+      user.password,
+    );
+    if (!isPwdValid) {
+      res.status(401).json({ msg: "Invalid credentials" });
       return;
     }
 
@@ -138,7 +207,7 @@ app.get("/users/:id", auth, isAdmin, (req, res) => {
   });
 });
 
-app.post("/createBook", auth, isAdmin, (req, res) => {
+app.post("/createBook", bookPayloadValidate, auth, isAdmin, (req, res) => {
   const newBook = {
     id: Math.floor(Math.random() * 1000000),
     bookName: req.body.bookName,
@@ -285,13 +354,13 @@ app.listen(port, () => {
 // crate a api where a user can purchase a book - done
 // create a api where the user can view all the books purchased by him - done
 
-// implement zod for input validation
+// implement zod for input validation - done
 
-// implement jwt for authentication done
+// implement jwt for authentication - done
 
-// hash password using bcrypt
+// hash password using bcrypt - done
 
-// implement global catch done
+// implement global catch - done
 
 // there is a lot of repetitive code for create try to create a single global function and reuse it
 

@@ -1,30 +1,37 @@
 [
   {
-    "id": 396376,
+    "id": 586614,
     "userId": "dennis",
-    "password": "Anime@123",
+    "password": "$2b$10$UrGCd7p5ybYEvT4afABm6uj0Tnblag87b5QCxN72qhv3IWJPNUjQW",
     "roles": ["Buyer", "Admin"],
-    "createdAt": "2026-01-23T17:01:04.105Z"
+    "createdAt": "2026-01-24T06:21:28.538Z"
   },
   {
-    "id": 722033,
-    "userId": "shaul",
-    "password": "Anime@123",
+    "id": 186088,
+    "userId": "darren",
+    "password": "$2b$10$J6wiekk9Y2kc4zm7zL1nxeZitWv3KOPTTdiRBXq.vd/AdAj8CSauO",
     "roles": ["Buyer"],
-    "createdAt": "2026-01-23T17:01:21.201Z"
+    "createdAt": "2026-01-24T06:21:39.197Z"
   },
   {
-    "id": 58989,
+    "id": 26114,
     "userId": "bhavin",
-    "password": "Anime@123",
+    "password": "$2b$10$qHziG3qT1HkZClZ7.hJbF.TovAwzWKUQatMF52gSat/PFuspwWu/.",
     "roles": ["Buyer"],
-    "createdAt": "2026-01-23T17:01:25.533Z"
+    "createdAt": "2026-01-24T06:21:44.472Z"
   },
   {
-    "id": 411291,
+    "id": 39853,
     "userId": "allen",
-    "password": "Anime@123",
+    "password": "$2b$10$wBMQS0Twf5eqI/f5AOcrn.KYezqGX7H60H0DiUvXlJEdOabSa7Ww.",
     "roles": ["Buyer"],
-    "createdAt": "2026-01-23T17:01:29.245Z"
+    "createdAt": "2026-01-24T06:21:48.812Z"
+  },
+  {
+    "id": 380966,
+    "userId": "alice",
+    "password": "$2b$10$UPz36DGWQyDzT6X78WH7/uTknyXBW7oRm3NO0SQZqnjjWCq6s6Ala",
+    "roles": ["Buyer"],
+    "createdAt": "2026-01-24T06:21:52.267Z"
   }
 ]
