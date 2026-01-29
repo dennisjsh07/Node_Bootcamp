@@ -1,9 +1,12 @@
 const mongoose = require("mongoose");
+const dotenv = require("dotenv");
+
+dotenv.config();
+
+const MONGO_URI = process.env.MONGO_URI;
 
 mongoose
-  .connect(
-    "mongodb+srv://dennisjshofficial:QQ3Vj76ZyYnBH35y@bookstore.cz7f2rw.mongodb.net/",
-  )
+  .connect(MONGO_URI)
   .then(() => console.log("MongoDB connected successfully!"))
   .catch((err) => console.log("MongoDB connection error", err));
 
@@ -33,7 +36,7 @@ const booksSchema = new mongoose.Schema(
 
 const ordersSchema = new mongoose.Schema({
   user: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
-  books: [{ type: mongoose.Schema.Types.ObjesctId, ref: "Books" }],
+  books: [{ type: mongoose.Schema.Types.ObjectId, ref: "Books" }],
 });
 
 const User = mongoose.model("User", userSchema);
