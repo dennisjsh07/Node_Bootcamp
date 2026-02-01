@@ -34,10 +34,13 @@ const booksSchema = new mongoose.Schema(
   { timestamps: true },
 );
 
-const ordersSchema = new mongoose.Schema({
-  user: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
-  books: [{ type: mongoose.Schema.Types.ObjectId, ref: "Books" }],
-});
+const ordersSchema = new mongoose.Schema(
+  {
+    user: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+    books: [{ type: mongoose.Schema.Types.ObjectId, ref: "Books" }],
+  },
+  { timestamps: true },
+);
 
 const User = mongoose.model("User", userSchema);
 const Books = mongoose.model("Books", booksSchema);
