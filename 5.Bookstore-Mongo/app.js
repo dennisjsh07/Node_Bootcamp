@@ -1,6 +1,6 @@
 const express = require("express");
 const jwt = require("jsonwebtoken");
-const { User, Books } = require("./db/index.js");
+const { User, Books, Orders } = require("./db/index.js");
 const mongoose = require("mongoose");
 require("dotenv").config();
 
@@ -109,11 +109,86 @@ app.get("/users/:id", auth, isAdmin, async (req, res, next) => {
   }
 });
 
-app.post("/createBook", async (req, res, next) => {
+app.post("/createBook", auth, isAdmin, async (req, res, next) => {
   try {
     const { bookName, authorName } = req.body;
     const newBook = await Books.create({ bookName, authorName });
     res.status(201).json({ msg: "book created successfully", data: newBook });
+  } catch (err) {
+    next(err);
+  }
+});
+
+app.get("/books", auth, async (req, res, next) => {
+  try {
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+
+    const books = await Books.find({})
+      .skip((page - 1) * limit)
+      .limit(limit);
+
+    res.status(200).json({ data: books });
+  } catch (err) {
+    next(err);
+  }
+});
+
+app.get("/books/:id", auth, async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ msg: "Invalid Book Id" });
+    }
+
+    const book = await Books.findOne({ _id: id });
+    if (!book) {
+      return res.status(404).json({ msg: "Book not found" });
+    }
+
+    res.status(200).json({ data: book });
+  } catch (err) {
+    next(err);
+  }
+});
+
+app.post("/purchase/:id", auth, async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ msg: "Invalid book id" });
+    }
+
+    const book = await Books.findById(id);
+    if (!book) {
+      return res.status(400).json({ msg: "Book not found" });
+    }
+
+    const user = req.user._id;
+
+    await Orders.updateOne(
+      { user },
+      { $addToSet: { books: id } },
+      { upsert: true },
+    );
+    res.status(201).json({ msg: "Book Purchased Successfully" });
+  } catch (err) {
+    next(err);
+  }
+});
+
+app.get("/purchases", auth, async (req, res, next) => {
+  try {
+    const orders = await Orders.findOne({ user: req.user._id });
+    if (!orders || orders.books.length === 0) {
+      return res.status(200).json({ data: [] });
+    }
+
+    const books = await Books.find({ _id: { $in: orders.books } }).select(
+      "bookName authorName createdAt",
+    );
+
+    res.status(200).json({ data: books });
   } catch (err) {
     next(err);
   }
@@ -134,15 +209,15 @@ app.listen(port, () => {
 // admin api's
 // create api to see all users - done
 // create api to view data of a particular user - done
-// create api to create books
+// create api to create books - done
 
 // user api's
 // create api to create users - done
-// create api for users to login
-// create api to get all books
-// create api to get a particular book
-// crate a api where a user can purchase a book
-// create a api where the user can view all the books purchased by him
+// create api for users to login - done
+// create api to get all books - done
+// create api to get a particular book - done
+// crate a api where a user can purchase a book - done
+// create a api where the user can view all the books purchased by him - done (use aggregate for the last one)
 
 // implement zod for input validation on (signup, signin, createbooks)
 
@@ -152,7 +227,7 @@ app.listen(port, () => {
 
 // implement global catch
 
-// there is a lot of repetitive code for create try to create a single global function and reuse it
+// implement golbal try catch
 
 // modularise the code
 
