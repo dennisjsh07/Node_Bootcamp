@@ -2,6 +2,8 @@ const express = require("express");
 const jwt = require("jsonwebtoken");
 const z = require("zod");
 const bcrypt = require("bcrypt");
+const saltRounds = 10;
+const asyncHandler = require("express-async-handler");
 
 const { User, Books, Orders } = require("./db/index.js");
 const mongoose = require("mongoose");
@@ -10,7 +12,6 @@ require("dotenv").config();
 
 const port = process.env.PORT;
 const jwtPassword = process.env.JWT_PASSWORD;
-const saltRounds = process.env.SALT_ROUNDS;
 
 const app = express();
 
@@ -105,47 +106,52 @@ function booksPayloadValidate(req, res, next) {
   next();
 }
 
-app.post("/signup", userPayloadValidate, async (req, res, next) => {
-  try {
-    const { userId, password, roles } = req.body;
+app.post(
+  "/signup",
+  userPayloadValidate,
+  asyncHandler(async (req, res) => {
+    const newUser = {
+      userId: req.body.userId.toLowerCase(),
+      password: await bcrypt.hash(req.body.password, saltRounds),
+      roles: ["User"],
+    };
 
-    const existingUser = await User.findOne({ userId });
+    const existingUser = await User.findOne({ userId: newUser.userId });
     if (existingUser) {
       return res.status(409).json({ msg: "User already exists" });
     }
 
-    const hashedPassword = bcrypt.hash(password, saltRounds);
+    const user = await User.create(newUser);
+    res.status(201).json({ msg: "user created successfully", data: user });
+  }),
+);
 
-    const newUser = await User.create({ userId, hashedPassword, roles });
-    res.status(200).json({ msg: "user created successfully", data: newUser });
-  } catch (err) {
-    next(err);
-  }
-});
-
-app.post("/signin", loginPayloadValidate, async (req, res, next) => {
-  try {
+app.post(
+  "/signin",
+  loginPayloadValidate,
+  asyncHandler(async (req, res) => {
     const { userId, password } = req.body;
 
-    const user = await User.findOne({ userId: userId, password: password });
+    const user = await User.findOne({ userId: userId.toLowerCase() });
     if (!user) {
       return res.status(404).json({ msg: "User Not Found" });
     }
 
-    const isPwdValid = bcrypt.compare(password, user.password);
+    const isPwdValid = await bcrypt.compare(password, user.password);
     if (!isPwdValid) {
       return res.status(401).json({ msg: "invalid credentials" });
     }
 
     const token = jwt.sign({ userId: req.body.userId }, jwtPassword);
     res.status(200).json({ msg: "User Login SuccessFully", auth: token });
-  } catch (err) {
-    next(err);
-  }
-});
+  }),
+);
 
-app.get("/users", auth, isAdmin, async (req, res, next) => {
-  try {
+app.get(
+  "/users",
+  auth,
+  isAdmin,
+  asyncHandler(async (req, res) => {
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
 
@@ -154,13 +160,14 @@ app.get("/users", auth, isAdmin, async (req, res, next) => {
       .skip((page - 1) * limit)
       .limit(limit);
     res.status(200).json({ data: users });
-  } catch (err) {
-    next(err);
-  }
-});
+  }),
+);
 
-app.get("/users/:id", auth, isAdmin, async (req, res, next) => {
-  try {
+app.get(
+  "/users/:id",
+  auth,
+  isAdmin,
+  asyncHandler(async (req, res) => {
     const { id } = req.params;
     if (!mongoose.Types.ObjectId.isValid(id)) {
       return res.status(400).json({ msg: "Invalid User Id" });
@@ -172,29 +179,25 @@ app.get("/users/:id", auth, isAdmin, async (req, res, next) => {
     }
 
     res.status(200).json({ data: user });
-  } catch (err) {
-    next(err);
-  }
-});
+  }),
+);
 
 app.post(
   "/createBook",
   auth,
   isAdmin,
   booksPayloadValidate,
-  async (req, res, next) => {
-    try {
-      const { bookName, authorName } = req.body;
-      const newBook = await Books.create({ bookName, authorName });
-      res.status(201).json({ msg: "book created successfully", data: newBook });
-    } catch (err) {
-      next(err);
-    }
-  },
+  asyncHandler(async (req, res) => {
+    const { bookName, authorName } = req.body;
+    const newBook = await Books.create({ bookName, authorName });
+    res.status(201).json({ msg: "book created successfully", data: newBook });
+  }),
 );
 
-app.get("/books", auth, async (req, res, next) => {
-  try {
+app.get(
+  "/books",
+  auth,
+  asyncHandler(async (req, res) => {
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
 
@@ -203,13 +206,13 @@ app.get("/books", auth, async (req, res, next) => {
       .limit(limit);
 
     res.status(200).json({ data: books });
-  } catch (err) {
-    next(err);
-  }
-});
+  }),
+);
 
-app.get("/books/:id", auth, async (req, res, next) => {
-  try {
+app.get(
+  "/books/:id",
+  auth,
+  asyncHandler(async (req, res) => {
     const { id } = req.params;
     if (!mongoose.Types.ObjectId.isValid(id)) {
       return res.status(400).json({ msg: "Invalid Book Id" });
@@ -221,13 +224,13 @@ app.get("/books/:id", auth, async (req, res, next) => {
     }
 
     res.status(200).json({ data: book });
-  } catch (err) {
-    next(err);
-  }
-});
+  }),
+);
 
-app.post("/purchase/:id", auth, async (req, res, next) => {
-  try {
+app.post(
+  "/purchase/:id",
+  auth,
+  asyncHandler(async (req, res) => {
     const { id } = req.params;
     if (!mongoose.Types.ObjectId.isValid(id)) {
       return res.status(400).json({ msg: "Invalid book id" });
@@ -246,13 +249,13 @@ app.post("/purchase/:id", auth, async (req, res, next) => {
       { upsert: true },
     );
     res.status(201).json({ msg: "Book Purchased Successfully" });
-  } catch (err) {
-    next(err);
-  }
-});
+  }),
+);
 
-app.get("/purchases", auth, async (req, res, next) => {
-  try {
+app.get(
+  "/purchases",
+  auth,
+  asyncHandler(async (req, res) => {
     const page = req.query.page || 1;
     const limit = req.query.limt || 10;
 
@@ -267,10 +270,8 @@ app.get("/purchases", auth, async (req, res, next) => {
       .limit(limit);
 
     res.status(200).json({ data: books });
-  } catch (err) {
-    next(err);
-  }
-});
+  }),
+);
 
 app.use((err, req, res, next) => {
   const statusCode = err.statusCode || 500;
