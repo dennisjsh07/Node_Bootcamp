@@ -1,11 +1,16 @@
 const express = require("express");
 const jwt = require("jsonwebtoken");
+const z = require("zod");
+const bcrypt = require("bcrypt");
+
 const { User, Books, Orders } = require("./db/index.js");
 const mongoose = require("mongoose");
+
 require("dotenv").config();
 
 const port = process.env.PORT;
 const jwtPassword = process.env.JWT_PASSWORD;
+const saltRounds = process.env.SALT_ROUNDS;
 
 const app = express();
 
@@ -44,7 +49,63 @@ function isAdmin(req, res, next) {
   next();
 }
 
-app.post("/signup", async (req, res, next) => {
+function userPayloadValidate(req, res, next) {
+  const schema = z.object({
+    userId: z.string(),
+    password: z.string(),
+    roles: z.array(z.string()),
+  });
+
+  const userPayload = {
+    userId: req.body.userId,
+    password: req.body.password,
+    roles: req.body.roles,
+  };
+
+  const result = schema.safeParse(userPayload);
+  if (!result.success) {
+    return res.status(400).json({ msg: "Wrong Inpugs" });
+  }
+  next();
+}
+
+function loginPayloadValidate(req, res, next) {
+  const schema = z.object({
+    userId: z.string(),
+    password: z.string(),
+  });
+
+  const inputBody = {
+    userId: req.body.userId,
+    password: req.body.password,
+  };
+
+  const result = schema.safeParse(inputBody);
+  if (!result.success) {
+    return res.status(400).json({ msg: "Wrong inputs" });
+  }
+  next();
+}
+
+function booksPayloadValidate(req, res, next) {
+  const schema = z.object({
+    bookName: z.string(),
+    authorName: z.string(),
+  });
+
+  const inputBody = {
+    bookName: req.body.bookName,
+    authorName: req.body.authorName,
+  };
+
+  const result = schema.safeParse(inputBody);
+  if (!result) {
+    return res.status(400).json({ msg: "Invalid Inputs" });
+  }
+  next();
+}
+
+app.post("/signup", userPayloadValidate, async (req, res, next) => {
   try {
     const { userId, password, roles } = req.body;
 
@@ -53,20 +114,27 @@ app.post("/signup", async (req, res, next) => {
       return res.status(409).json({ msg: "User already exists" });
     }
 
-    const newUser = await User.create({ userId, password, roles });
+    const hashedPassword = bcrypt.hash(password, saltRounds);
+
+    const newUser = await User.create({ userId, hashedPassword, roles });
     res.status(200).json({ msg: "user created successfully", data: newUser });
   } catch (err) {
     next(err);
   }
 });
 
-app.post("/signin", async (req, res, next) => {
+app.post("/signin", loginPayloadValidate, async (req, res, next) => {
   try {
     const { userId, password } = req.body;
 
     const user = await User.findOne({ userId: userId, password: password });
     if (!user) {
       return res.status(404).json({ msg: "User Not Found" });
+    }
+
+    const isPwdValid = bcrypt.compare(password, user.password);
+    if (!isPwdValid) {
+      return res.status(401).json({ msg: "invalid credentials" });
     }
 
     const token = jwt.sign({ userId: req.body.userId }, jwtPassword);
@@ -109,15 +177,21 @@ app.get("/users/:id", auth, isAdmin, async (req, res, next) => {
   }
 });
 
-app.post("/createBook", auth, isAdmin, async (req, res, next) => {
-  try {
-    const { bookName, authorName } = req.body;
-    const newBook = await Books.create({ bookName, authorName });
-    res.status(201).json({ msg: "book created successfully", data: newBook });
-  } catch (err) {
-    next(err);
-  }
-});
+app.post(
+  "/createBook",
+  auth,
+  isAdmin,
+  booksPayloadValidate,
+  async (req, res, next) => {
+    try {
+      const { bookName, authorName } = req.body;
+      const newBook = await Books.create({ bookName, authorName });
+      res.status(201).json({ msg: "book created successfully", data: newBook });
+    } catch (err) {
+      next(err);
+    }
+  },
+);
 
 app.get("/books", auth, async (req, res, next) => {
   try {
@@ -179,14 +253,18 @@ app.post("/purchase/:id", auth, async (req, res, next) => {
 
 app.get("/purchases", auth, async (req, res, next) => {
   try {
+    const page = req.query.page || 1;
+    const limit = req.query.limt || 10;
+
     const orders = await Orders.findOne({ user: req.user._id });
     if (!orders || orders.books.length === 0) {
       return res.status(200).json({ data: [] });
     }
 
-    const books = await Books.find({ _id: { $in: orders.books } }).select(
-      "bookName authorName createdAt",
-    );
+    const books = await Books.find({ _id: { $in: orders.books } })
+      .select("bookName authorName createdAt")
+      .skip((page - 1) * limit)
+      .limit(limit);
 
     res.status(200).json({ data: books });
   } catch (err) {
@@ -219,18 +297,18 @@ app.listen(port, () => {
 // crate a api where a user can purchase a book - done
 // create a api where the user can view all the books purchased by him - done (use aggregate for the last one)
 
-// implement zod for input validation on (signup, signin, createbooks)
+// implement zod for input validation on (signup, signin, createbooks) - done
 
-// implement jwt for authentication
+// implement jwt for authentication - done
 
-// hash password using bcrypt
+// hash password using bcrypt - done
 
-// implement global catch
+// implement global catch - done
 
 // implement golbal try catch
 
 // modularise the code
 
-// include pagination
+// include pagination - done
 
 // what are the procedurse to be followed if i change the schema of a collection which is already having data
