@@ -1,9 +1,9 @@
 const express = require("express");
-const jwt = require("jsonwebtoken");
 const z = require("zod");
 const bcrypt = require("bcrypt");
 const saltRounds = 10;
 const asyncHandler = require("express-async-handler");
+const rootRouter = require("./router/index.js");
 
 const { User, Books, Orders } = require("./db/index.js");
 const mongoose = require("mongoose");
@@ -11,100 +11,12 @@ const mongoose = require("mongoose");
 require("dotenv").config();
 
 const port = process.env.PORT;
-const jwtPassword = process.env.JWT_PASSWORD;
 
 const app = express();
 
 app.use(express.json());
 
-async function auth(req, res, next) {
-  try {
-    const authHeader = req.headers.authorization;
-
-    if (!authHeader || !authHeader.startsWith("Bearer ")) {
-      return res.status(401).json({ msg: "unauthorized" });
-    }
-
-    const token = authHeader.split(" ");
-
-    const decodeToken = jwt.verify(token[1], jwtPassword);
-
-    const user = await User.findOne({ userId: decodeToken.userId }).select(
-      "_id userId roles",
-    );
-
-    if (!user) {
-      return res.status(401).json({ msg: "unauthorized" });
-    }
-    req.user = user;
-    next();
-  } catch (err) {
-    res.status(401).json({ msg: "Invalid or expired token" });
-  }
-}
-
-function isAdmin(req, res, next) {
-  if (!req.user.roles || !req.user.roles.includes("Admin")) {
-    return res.status(403).json({ msg: "Admin access required" });
-  }
-  next();
-}
-
-function userPayloadValidate(req, res, next) {
-  const schema = z.object({
-    userId: z.string(),
-    password: z.string(),
-    roles: z.array(z.string()),
-  });
-
-  const userPayload = {
-    userId: req.body.userId,
-    password: req.body.password,
-    roles: req.body.roles,
-  };
-
-  const result = schema.safeParse(userPayload);
-  if (!result.success) {
-    return res.status(400).json({ msg: "Wrong Inpugs" });
-  }
-  next();
-}
-
-function loginPayloadValidate(req, res, next) {
-  const schema = z.object({
-    userId: z.string(),
-    password: z.string(),
-  });
-
-  const inputBody = {
-    userId: req.body.userId,
-    password: req.body.password,
-  };
-
-  const result = schema.safeParse(inputBody);
-  if (!result.success) {
-    return res.status(400).json({ msg: "Wrong inputs" });
-  }
-  next();
-}
-
-function booksPayloadValidate(req, res, next) {
-  const schema = z.object({
-    bookName: z.string(),
-    authorName: z.string(),
-  });
-
-  const inputBody = {
-    bookName: req.body.bookName,
-    authorName: req.body.authorName,
-  };
-
-  const result = schema.safeParse(inputBody);
-  if (!result) {
-    return res.status(400).json({ msg: "Invalid Inputs" });
-  }
-  next();
-}
+app.use("/api/v1", rootRouter);
 
 app.post(
   "/signup",
@@ -144,53 +56,6 @@ app.post(
 
     const token = jwt.sign({ userId: req.body.userId }, jwtPassword);
     res.status(200).json({ msg: "User Login SuccessFully", auth: token });
-  }),
-);
-
-app.get(
-  "/users",
-  auth,
-  isAdmin,
-  asyncHandler(async (req, res) => {
-    const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 10;
-
-    const users = await User.find({})
-      .select("-passoword")
-      .skip((page - 1) * limit)
-      .limit(limit);
-    res.status(200).json({ data: users });
-  }),
-);
-
-app.get(
-  "/users/:id",
-  auth,
-  isAdmin,
-  asyncHandler(async (req, res) => {
-    const { id } = req.params;
-    if (!mongoose.Types.ObjectId.isValid(id)) {
-      return res.status(400).json({ msg: "Invalid User Id" });
-    }
-
-    const user = await User.findOne({ _id: id }).select("-password");
-    if (!user) {
-      return res.status(404).json({ msg: "user not found" });
-    }
-
-    res.status(200).json({ data: user });
-  }),
-);
-
-app.post(
-  "/createBook",
-  auth,
-  isAdmin,
-  booksPayloadValidate,
-  asyncHandler(async (req, res) => {
-    const { bookName, authorName } = req.body;
-    const newBook = await Books.create({ bookName, authorName });
-    res.status(201).json({ msg: "book created successfully", data: newBook });
   }),
 );
 
@@ -306,9 +171,9 @@ app.listen(port, () => {
 
 // implement global catch - done
 
-// implement golbal try catch
+// implement golbal try catch - done
 
-// modularise the code
+// modularise the code -
 
 // include pagination - done
 
