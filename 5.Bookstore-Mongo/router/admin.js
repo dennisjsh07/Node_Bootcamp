@@ -4,7 +4,7 @@ const { User, Books } = require("../db/index.js");
 const { auth } = require("../middleware/auth.js");
 const { isAdmin } = require("../middleware/admin.js");
 const { booksPayloadValidate } = require("../types.js");
-const asyncHandler = require("express-async-handler");
+const mongoose = require("mongoose");
 
 const router = express.Router();
 

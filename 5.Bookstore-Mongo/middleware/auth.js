@@ -1,4 +1,5 @@
 const jwt = require("jsonwebtoken");
+const { User } = require("../db/index.js");
 
 require("dotenv").config();
 
@@ -16,9 +17,9 @@ const auth = async (req, res, next) => {
 
     const decodeToken = jwt.verify(token[1], jwtPassword);
 
-    const user = await User.findOne({ userId: decodeToken.userId }).select(
-      "_id userId roles",
-    );
+    const user = await User.findOne({
+      userId: decodeToken.userId.toLowerCase(),
+    }).select("_id userId roles");
 
     if (!user) {
       return res.status(401).json({ msg: "unauthorized" });
@@ -26,7 +27,7 @@ const auth = async (req, res, next) => {
     req.user = user;
     next();
   } catch (err) {
-    res.status(401).json({ msg: "Invalid or expired token" });
+    next(err);
   }
 };
 
