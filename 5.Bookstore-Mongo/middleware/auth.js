@@ -10,7 +10,7 @@ const auth = async (req, res, next) => {
     const authHeader = req.headers.authorization;
 
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
-      return res.status(401).json({ msg: "unauthorized" });
+      return res.status(401).json({ success: false, msg: "unauthorized" });
     }
 
     const token = authHeader.split(" ");
@@ -22,7 +22,7 @@ const auth = async (req, res, next) => {
     }).select("_id userId roles");
 
     if (!user) {
-      return res.status(401).json({ msg: "unauthorized" });
+      return res.status(401).json({ success: false, msg: "unauthorized" });
     }
     req.user = user;
     next();

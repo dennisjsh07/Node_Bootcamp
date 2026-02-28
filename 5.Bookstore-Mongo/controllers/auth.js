@@ -15,11 +15,13 @@ const userRegister = asyncHandler(async (req, res) => {
 
   const existingUser = await User.findOne({ userId: newUser.userId });
   if (existingUser) {
-    return res.status(409).json({ msg: "User already exists" });
+    return res.status(409).json({ success: false, msg: "User already exists" });
   }
 
   const user = await User.create(newUser);
-  res.status(201).json({ msg: "user created successfully", data: user });
+  res
+    .status(201)
+    .json({ success: true, msg: "user created successfully", data: user });
 });
 
 const userLogin = asyncHandler(async (req, res) => {
@@ -27,12 +29,12 @@ const userLogin = asyncHandler(async (req, res) => {
 
   const user = await User.findOne({ userId: userId.toLowerCase() });
   if (!user) {
-    return res.status(404).json({ msg: "User Not Found" });
+    return res.status(404).json({ success: false, msg: "User Not Found" });
   }
 
   const isPwdValid = await bcrypt.compare(password, user.password);
   if (!isPwdValid) {
-    return res.status(401).json({ msg: "invalid credentials" });
+    return res.status(401).json({ success: false, msg: "invalid credentials" });
   }
 
   const token = jwt.sign(
@@ -40,7 +42,9 @@ const userLogin = asyncHandler(async (req, res) => {
     jwtPassword,
     { expiresIn: "15m" },
   );
-  res.status(200).json({ msg: "User Login SuccessFully", auth: token });
+  res
+    .status(200)
+    .json({ success: true, msg: "User Login SuccessFully", auth: token });
 });
 
 module.exports = { userRegister, userLogin };

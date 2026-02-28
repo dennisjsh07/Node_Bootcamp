@@ -1,3 +1,4 @@
+const { success } = require("zod");
 const { Books } = require("../models/books.js");
 const { Orders } = require("../models/orders.js");
 const asyncHandler = require("express-async-handler");
@@ -11,32 +12,32 @@ const getBooks = asyncHandler(async (req, res) => {
     .skip((page - 1) * limit)
     .limit(limit);
 
-  res.status(200).json({ data: books });
+  res.status(200).json({ success: true, data: books });
 });
 
 const getSingleBook = asyncHandler(async (req, res) => {
   const { id } = req.params;
   if (!mongoose.Types.ObjectId.isValid(id)) {
-    return res.status(400).json({ msg: "Invalid Book Id" });
+    return res.status(400).json({ success: false, msg: "Invalid Book Id" });
   }
 
   const book = await Books.findOne({ _id: id });
   if (!book) {
-    return res.status(404).json({ msg: "Book not found" });
+    return res.status(404).json({ success: false, msg: "Book not found" });
   }
 
-  res.status(200).json({ data: book });
+  res.status(200).json({ success: true, data: book });
 });
 
 const purchaseBook = asyncHandler(async (req, res) => {
   const { id } = req.params;
   if (!mongoose.Types.ObjectId.isValid(id)) {
-    return res.status(400).json({ msg: "Invalid book id" });
+    return res.status(400).json({ success: false, msg: "Invalid book id" });
   }
 
   const book = await Books.findById(id);
   if (!book) {
-    return res.status(400).json({ msg: "Book not found" });
+    return res.status(400).json({ success: false, msg: "Book not found" });
   }
 
   const user = req.user._id;
@@ -46,7 +47,7 @@ const purchaseBook = asyncHandler(async (req, res) => {
     { $addToSet: { books: id } },
     { upsert: true },
   );
-  res.status(201).json({ msg: "Book Purchased Successfully" });
+  res.status(201).json({ success: true, msg: "Book Purchased Successfully" });
 });
 
 const getPurchases = asyncHandler(async (req, res) => {
@@ -55,7 +56,7 @@ const getPurchases = asyncHandler(async (req, res) => {
 
   const orders = await Orders.findOne({ user: req.user._id });
   if (!orders || orders.books.length === 0) {
-    return res.status(200).json({ data: [] });
+    return res.status(200).json({ success: true, data: [] });
   }
 
   const books = await Books.find({ _id: { $in: orders.books } })
@@ -63,7 +64,7 @@ const getPurchases = asyncHandler(async (req, res) => {
     .skip((page - 1) * limit)
     .limit(limit);
 
-  res.status(200).json({ data: books });
+  res.status(200).json({ success: true, data: books });
 });
 
 module.exports = { getBooks, getSingleBook, purchaseBook, getPurchases };
