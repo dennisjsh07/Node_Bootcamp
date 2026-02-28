@@ -1,6 +1,7 @@
 const express = require("express");
 const asyncHandler = require("express-async-handler");
-const { User, Books } = require("../db/index.js");
+const { Books } = require("../models/books.js");
+const { User } = require("../models/user.js");
 const { auth } = require("../middleware/auth.js");
 const { isAdmin } = require("../middleware/admin.js");
 const { booksPayloadValidate } = require("../types.js");
