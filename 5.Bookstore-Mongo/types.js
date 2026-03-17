@@ -1,4 +1,5 @@
 const z = require("zod");
+const { ur } = require("zod/v4/locales");
 
 const userPayloadValidate = (req, res, next) => {
   const schema = z.object({
@@ -42,6 +43,10 @@ const booksPayloadValidate = (req, res, next) => {
   const schema = z.object({
     bookName: z.string(),
     authorName: z.string(),
+    coverImage: z.object({
+      url: z.string(),
+      publicId: z.string(),
+    }),
   });
 
   const inputBody = {

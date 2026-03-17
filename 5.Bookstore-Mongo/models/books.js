@@ -4,7 +4,18 @@ const booksSchema = new mongoose.Schema(
   {
     bookName: { type: String, required: true },
     authorName: { type: String, required: true },
+    coverImage: {
+      url: {
+        type: String,
+        required: true,
+      },
+      publicId: {
+        type: String,
+        required: true,
+      },
+    },
   },
+
   { timestamps: true },
 );
 
