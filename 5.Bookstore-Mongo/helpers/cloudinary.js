@@ -14,4 +14,15 @@ const uploadToCloudinary = async (filePath) => {
   }
 };
 
-module.exports = { uploadToCloudinary };
+// helper method to delete image from cloudinary
+const deleteFromCloudinary = async (publicId) => {
+  try {
+    await cloudinary.uploader.destroy(publicId);  
+  } catch (err) {
+    console.error("Error while deleting from cloudinary", err);
+    throw new Error("Error while deleting from cloudinary");
+  }
+};
+
+
+module.exports = { uploadToCloudinary, deleteFromCloudinary };
