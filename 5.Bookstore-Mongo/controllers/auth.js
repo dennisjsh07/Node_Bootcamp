@@ -47,4 +47,32 @@ const userLogin = asyncHandler(async (req, res) => {
     .json({ success: true, msg: "User Login SuccessFully", auth: token });
 });
 
-module.exports = { userRegister, userLogin };
+const changePassword = asyncHandler(async (req, res) => {
+  const { oldPassword, newPassword } = req.body;
+  const userId = req.user.userId;
+
+  if (!oldPassword || !newPassword) {
+    return res
+      .status(400)
+      .json({ success: false, msg: "All fileds are required" });
+  }
+
+  const user = await User.findOne({ userId: userId }).select("password");
+
+  const isMatch = await bcrypt.compare(oldPassword, user.password);
+
+  if (!isMatch) {
+    return res
+      .status(401)
+      .json({ success: false, msg: "Invalid current password" });
+  }
+
+  const hashPassword = await bcrypt.hash(newPassword, saltRounds);
+
+  user.password = hashPassword;
+  await user.save();
+
+  res.status(200).json({ success: true, msg: "Password changed successfully" });
+});
+
+module.exports = { userRegister, userLogin, changePassword };
