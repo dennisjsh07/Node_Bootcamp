@@ -2,6 +2,8 @@ const { User } = require("../models/user.js");
 const asyncHandler = require("express-async-handler");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
+const sendEmail = require("../utils/sendEmail.js");
+const renderTemplate = require("../utils/renderTemplate.js");
 require("dotenv").config();
 const jwtPassword = process.env.JWT_PASSWORD;
 const saltRounds = 10;
@@ -102,7 +104,41 @@ const forgotPassword = asyncHandler(async (req, res) => {
 
   const resetUrl = `http://localhost:3000/reset-password/${resetToken}`;
 
+  const templateValue = {
+    title: "Password Reset Request",
+    userName: `Dear ${user.userId}`,
+    sections: [
+      {
+        title: "",
+        intro: "",
+        body: "Click on the url below to reset your passoword",
+        list: [],
+      },
+    ],
+    tableHeader: "Reset Details",
+    tableContent: [
+      {
+        name: "Portal URL",
+        value: resetUrl,
+        isLink: true,
+        linkLabel: "Click here to Reset Your Password",
+      },
+    ],
+    signOff: "Warm regards,",
+    teamName: "buniq Book Store",
+  };
+
+  const html = renderTemplate(
+    "../templates/notificationTemplate.html",
+    templateValue,
+  );
+
   // send mail
+  await sendEmail({
+    to: user.userId,
+    subject: "Password Reset Request",
+    html,
+  });
 
   res
     .status(200)

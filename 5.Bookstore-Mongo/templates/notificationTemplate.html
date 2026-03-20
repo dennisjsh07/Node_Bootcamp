@@ -1,0 +1,191 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <style>
+      body {
+        margin: 0;
+        padding: 0;
+        background-color: #f4f6f9;
+        font-family: Arial, Helvetica, sans-serif;
+      }
+
+      .container {
+        max-width: 700px;
+        margin: 40px auto;
+        background: #ffffff;
+        padding: 40px;
+        border-radius: 8px;
+      }
+
+      h1 {
+        font-size: 20px;
+        color: #60bd00;
+        text-align: center;
+        margin-bottom: 30px;
+      }
+
+      h2 {
+        font-size: 16px;
+        margin-top: 30px;
+        color: #0066cc;
+      }
+
+      p {
+        font-size: 14px;
+        line-height: 1.6;
+        color: #333;
+      }
+
+      ul {
+        margin-left: 20px;
+        font-size: 14px;
+        line-height: 1.6;
+        color: #333;
+      }
+
+      table tr:nth-child(even) {
+        background-color: #f4f4f4;
+      }
+
+      table tr:nth-child(odd) {
+        background-color: #ffffff;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="container">
+      {{#if title}}
+      <h1>{{title}}</h1>
+      {{/if}}
+
+      <p><strong>Dear {{userName}},</strong></p>
+
+      {{#if Greetings}}
+      <p><strong>{{Greetings}}</strong></p>
+      {{/if}} {{!-- =============================== UNIFIED DYNAMIC EMAIL BODY
+      =============================== --}} {{#if emailBody}} {{#each emailBody}}
+      <p>{{{text}}}</p>
+      {{/each}} {{/if}} {{!-- =============================== UNIFIED DYNAMIC
+      SECTIONS =============================== --}} {{#if sections}} {{#each
+      sections}} {{#if title}}
+      <h2>{{{title}}}</h2>
+      {{/if}} {{#if intro}}
+      <p>{{{intro}}}</p>
+      {{/if}} {{#if body}}
+      <p>{{{body}}}</p>
+      {{/if}} {{#if list}}
+      <ul>
+        {{#each list}}
+        <li>{{this}}</li>
+        {{/each}}
+      </ul>
+      {{/if}} {{/each}} {{/if}} {{!-- =============================== FIXED ROW
+      TABLE COMPONENT =============================== --}} {{#if tableHeader}}
+      <div style="margin-top: 25px">
+        <div
+          style="
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #0066cc;
+          "
+        >
+          {{tableHeader}}
+        </div>
+
+        <table
+          width="100%"
+          cellpadding="10"
+          cellspacing="0"
+          style="
+            border-collapse: collapse;
+            border: 1px solid #ddd;
+            font-family: Arial, sans-serif;
+          "
+        >
+          {{#if tableContent}} {{#each tableContent}} {{#if name}} {{#if value}}
+          <tr>
+            <td style="border: 1px solid #ddd">{{name}}</td>
+            <td
+              style="border: 1px solid #ddd; color: #0066cc; font-weight: bold"
+            >
+              {{#if isLink}}
+              <a href="{{value}}" target="_blank"> {{linkLabel}} </a>
+              {{else}} {{value}} {{/if}}
+            </td>
+          </tr>
+          {{/if}} {{/if}} {{/each}} {{/if}}
+        </table>
+      </div>
+      {{/if}} {{!-- =============================== USER GUIDE SECTION
+      =============================== --}} {{#if userguideval}}
+      <div style="margin-top: 20px; text-align: center">
+        <a
+          href="{{userguideval}}"
+          target="_blank"
+          style="
+            display: inline-flex;
+            align-items: center;
+            padding: 10px 15px;
+            background-color: #ffffff;
+            font-weight: bold;
+            text-decoration: none;
+            color: #0066cc;
+            font-size: 14px;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+          "
+        >
+          <img
+            src="https://schinternalstorage.blob.core.windows.net/schsupplier/yasref-dev/templates/vendor-management/dev/user-guide-icon.png"
+            alt="Guide Icon"
+            width="20"
+            style="margin-right: 8px"
+          />
+          <span>{{userguide}}</span>
+        </a>
+      </div>
+      {{/if}} {{!-- =============================== UNIFIED DYNAMIC SECTIONS2
+      =============================== --}} {{#if sections2}} {{#each sections2}}
+      {{#if title}}
+      <h2>{{{title}}}</h2>
+      {{/if}} {{#if intro}}
+      <p>{{{intro}}}</p>
+      {{/if}} {{#if body}}
+      <p>{{{body}}}</p>
+      {{/if}} {{#if list}}
+      <ul>
+        {{#each list}}
+        <li>{{this}}</li>
+        {{/each}}
+      </ul>
+      {{/if}} {{/each}} {{/if}} {{#if closing}}
+      <p>{{closing}}</p>
+      {{/if}} {{#if signOff}}
+      <p style="margin-top: 30px">{{signOff}}</p>
+      {{/if}} {{#if teamName}}
+      <p><strong>{{teamName}}</strong></p>
+      {{/if}} {{#if timestamp}}
+      <div style="display: none">{{timestamp}}</div>
+      {{/if}}
+      <div
+        style="
+          background-image: url(&quot;https://schinternalstorage.blob.core.windows.net/schsupplier/yasref-dev/templates/vendor-management/dev/border.png&quot;);
+          background-repeat: no-repeat;
+          background-position: center;
+          background-size: cover;
+          height: 45px;
+          margin-left: -40px;
+          margin-right: -40px;
+          margin-bottom: -40px;
+          margin-top: 30px;
+        "
+      >
+        &nbsp;
+      </div>
+    </div>
+  </body>
+</html>
