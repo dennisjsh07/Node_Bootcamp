@@ -5,6 +5,7 @@ const bcrypt = require("bcrypt");
 require("dotenv").config();
 const jwtPassword = process.env.JWT_PASSWORD;
 const saltRounds = 10;
+const crypto = require("crypto");
 
 const userRegister = asyncHandler(async (req, res) => {
   const newUser = {
@@ -75,4 +76,72 @@ const changePassword = asyncHandler(async (req, res) => {
   res.status(200).json({ success: true, msg: "Password changed successfully" });
 });
 
-module.exports = { userRegister, userLogin, changePassword };
+const forgotPassword = asyncHandler(async (req, res) => {
+  const { userId } = req.body;
+  // console.log(userId)
+
+  const user = await User.findOne({ userId: userId.toLowerCase() });
+  if (!user) {
+    return res.status(404).json({ success: false, msg: "user not found" });
+  }
+
+  const resetToken = crypto.randomBytes(32).toString("hex");
+  // console.log("resetToken :", resetToken);
+
+  const hashedToken = crypto
+    .createHash("sha256")
+    .update(resetToken)
+    .digest("hex");
+
+  // console.log("hashedToken :", hashedToken);
+
+  user.resetPasswordToken = hashedToken;
+  user.resetPasswordExpiry = Date.now() + 15 * 60 * 1000;
+
+  await user.save();
+
+  const resetUrl = `http://localhost:3000/reset-password/${resetToken}`;
+
+  // send mail
+
+  res
+    .status(200)
+    .json({ success: true, msg: "Password reset successfully", resetUrl });
+});
+
+const resetPassword = asyncHandler(async (req, res) => {
+  const token = req.params.token;
+  // console.log("token :", token);
+
+  const hashedToken = crypto.createHash("sha256").update(token).digest("hex");
+  // console.log("hashedToken :", hashedToken);
+
+  const user = await User.findOne({
+    resetPasswordToken: hashedToken,
+    resetPasswordExpiry: { $gt: Date.now() },
+  });
+
+  if (!user) {
+    return res
+      .status(400)
+      .json({ success: false, msg: "Invalid or Expired token" });
+  }
+
+  const hashedPassword = await bcrypt.hash(req.body.password, saltRounds);
+
+  user.password = hashedPassword;
+  user.resetPasswordExpiry = undefined;
+  user.resetPasswordToken = undefined;
+
+  await user.save();
+
+  res.status(200).json({ success: true, msg: "Password reset successfull" });
+});
+
+module.exports = {
+  userRegister,
+  userLogin,
+  changePassword,
+  forgotPassword,
+  resetPassword,
+};
