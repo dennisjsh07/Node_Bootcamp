@@ -52,13 +52,14 @@ const userLogin = asyncHandler(async (req, res) => {
 
 const changePassword = asyncHandler(async (req, res) => {
   const { oldPassword, newPassword } = req.body;
-  const userId = req.user.userId;
 
-  if (!oldPassword || !newPassword) {
+  if (!oldPassword && !newPassword) {
     return res
       .status(400)
       .json({ success: false, msg: "All fileds are required" });
   }
+
+  const userId = req.user.userId;
 
   const user = await User.findOne({ userId: userId }).select("password");
 
