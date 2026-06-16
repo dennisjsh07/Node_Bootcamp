@@ -52,7 +52,7 @@ function checkLegalStatus(user: User): string {
   }
   return "illegal";
 }
-console.log(checkLegalStatus({ name: "Dennis", age: 29 }));
+// console.log(checkLegalStatus({ name: "Dennis", age: 29 }));
 
 // classes using interface
 interface Person {
@@ -76,6 +76,24 @@ class Employee implements Person {
 }
 const emp1 = new Employee("Dennis", 29);
 emp1.greet("Hello my name is");
+
+// calculate the sum of age of users
+interface User {
+  name: string;
+  age: number;
+  isActive: Boolean;
+}
+
+function sumOfAge(user1: User, user2: User) {
+  return user1.age + user2.age;
+}
+
+console.log(
+  sumOfAge(
+    { name: "Dennis", age: 29, isActive: true },
+    { name: "Bhavin", age: 8, isActive: true },
+  ),
+);
 
 // Types
 // union type
@@ -140,15 +158,88 @@ console.log(
 );
 
 // Enums: Group of named constants.
-enum ResourceType {
-  Book, // 0
-  Author, // 1
-  Film, // 2
-  Person, // 3
+// enum ResourceType {
+//   Book, // 0
+//   Author, // 1
+//   Film, // 2
+//   Person, // 3
+// }
+
+// function createResource(type: ResourceType, name: string) {
+//   console.log(`Creating ${name} as ${ResourceType[type]}`);
+// }
+
+// createResource(ResourceType.Book, "Harry Potter");
+
+// Generics for variables
+function identity<T>(a: T) {
+  return a;
+}
+console.log(identity<string>("dennis"));
+console.log(identity<number>(2));
+console.log(identity<Boolean>(true));
+
+// Generics for arrays
+function arrayIdentity<T>(arr: T[]) {
+  return arr;
+}
+console.log(arrayIdentity<string>(["a", "b", "c"]));
+console.log(arrayIdentity<number>([1, 2, 3]));
+console.log(arrayIdentity<Boolean>([true, false, true]));
+
+// Generics for array of objects
+interface Data {
+  name: string;
+  age: number;
+  isActive: Boolean;
 }
 
-function createResource(type: ResourceType, name: string) {
-  console.log(`Creating ${name} as ${ResourceType[type]}`);
+function getFirstElement<T>(arr: T[]) {
+  return arr[0];
 }
 
-createResource(ResourceType.Book, "Harry Potter");
+console.log(
+  getFirstElement<Data>([
+    { name: "Dennis", age: 29, isActive: true },
+    { name: "Bhavin", age: 8, isActive: true },
+  ]),
+);
+
+/**
+ * Typescript Advanced
+ */
+
+// Pick : Used to pick properties from interface, all picked properties must be used
+interface DBUser {
+  id: string;
+  name: string;
+  age: number;
+  email: string;
+  password: string;
+}
+
+type PickProps = Pick<DBUser, "name" | "age" | "email">;
+type PartialProps = Partial<DBUser>;
+
+function testPick(user: PartialProps) {}
+
+console.log(testPick({ name: "Dennis", age: 29 }));
+
+// ReadOnly: cannot reasign another value to a declared variableF
+interface User1 {
+  name: string;
+  age: 29;
+}
+
+const obj = {
+  name: "Dennis",
+  age: 29,
+};
+obj.name = "Joshua";
+console.log("obj", obj);
+
+const obj1: Readonly<User1> = {
+  name: "Dennis",
+  age: 29,
+};
+// obj1.name = "Joshua";
